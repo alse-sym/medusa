@@ -14,7 +14,6 @@ permissions:
 engine: claude
 imports:
   - shared/gh-aw-base.md
-  - ../agents/release-notes-writer.md
 safe-outputs:
   update-release:
     max: 1
