@@ -1,5 +1,18 @@
 # @medusajs/core-flows
 
+## 2.13.2
+
+### Patch Changes
+
+- [#14660](https://github.com/medusajs/medusa/pull/14660) [`05262c0197bcc3c9cec89a3d95863916dba47af3`](https://github.com/medusajs/medusa/commit/05262c0197bcc3c9cec89a3d95863916dba47af3) Thanks [@Fadyy22](https://github.com/Fadyy22)! - chore(core-flows,medusa): Pass `created_by` to `createOrderShipmentWorkflow` in create order shipment admin endpoint and pass `marked_shipped_by` to `createShipmentWorkflow`
+
+- [#14670](https://github.com/medusajs/medusa/pull/14670) [`29d3dee13700d36a70aa55b8f2a01a5cbc0b42d0`](https://github.com/medusajs/medusa/commit/29d3dee13700d36a70aa55b8f2a01a5cbc0b42d0) Thanks [@NicolasGorga](https://github.com/NicolasGorga)! - fix(core-flows): only consider captures amounts for credit line amount computation
+
+- [#14665](https://github.com/medusajs/medusa/pull/14665) [`77d899e135ed75668ca7d7b01a8ed4f0c1fe0ac8`](https://github.com/medusajs/medusa/commit/77d899e135ed75668ca7d7b01a8ed4f0c1fe0ac8) Thanks [@carlos-r-l-rodrigues](https://github.com/carlos-r-l-rodrigues)! - feat: add forbidden error 403
+
+- Updated dependencies [[`7aca778ae56069371f5d26a757d3b2276d524776`](https://github.com/medusajs/medusa/commit/7aca778ae56069371f5d26a757d3b2276d524776), [`77d899e135ed75668ca7d7b01a8ed4f0c1fe0ac8`](https://github.com/medusajs/medusa/commit/77d899e135ed75668ca7d7b01a8ed4f0c1fe0ac8)]:
+  - @medusajs/framework@2.13.2
+
 ## 2.13.1
 
 ### Patch Changes
