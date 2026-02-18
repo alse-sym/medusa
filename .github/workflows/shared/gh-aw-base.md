@@ -4,7 +4,6 @@ permissions:
   actions: read
 tools:
   github:
-    mode: remote
     toolsets: [repos, issues, pull_requests, actions]
   web-fetch:
   web-search:
