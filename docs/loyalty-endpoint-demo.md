@@ -30,3 +30,4 @@ This change introduces a new admin API endpoint proposal for loyalty points adju
 - Added optional query flag: `include_history=true` to include latest adjustment history in response.
 
 - Clarified: history list is capped to last 20 adjustments.
+
