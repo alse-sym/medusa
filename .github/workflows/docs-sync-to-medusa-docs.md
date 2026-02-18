@@ -1,6 +1,7 @@
 ---
 on:
-  push:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
     branches: [develop, main]
 permissions:
   contents: read
@@ -23,15 +24,15 @@ steps:
   - uses: actions/checkout@v5
     with:
       fetch-depth: 0
-  - name: Collect push context
+  - name: Collect PR context
     run: |
       mkdir -p /tmp/gh-aw/agent
-      cp "$GITHUB_EVENT_PATH" /tmp/gh-aw/agent/push-event.json
-      git diff --name-status "$BEFORE_SHA" "$AFTER_SHA" > /tmp/gh-aw/agent/changed-files.txt
-      git diff "$BEFORE_SHA" "$AFTER_SHA" > /tmp/gh-aw/agent/changes.diff
+      gh pr view "$PR_NUMBER" --json number,title,body,author,baseRefName,headRefName,labels,url,mergedAt > /tmp/gh-aw/agent/pr-metadata.json
+      gh pr diff "$PR_NUMBER" > /tmp/gh-aw/agent/pr.diff
+      gh pr view "$PR_NUMBER" --json files > /tmp/gh-aw/agent/pr-files.json
     env:
-      BEFORE_SHA: ${{ github.event.before }}
-      AFTER_SHA: ${{ github.event.after }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
   - name: Checkout docs repository
     uses: actions/checkout@v5
     with:
@@ -40,15 +41,15 @@ steps:
       path: docs-repo
 ---
 
-# Push Documentation Sync
+# PR Documentation Sync
 
-Analyze the merged code changes and create documentation updates in `docs-repo` (the `alse-sym/medusa-docs` repository).
+Analyze the code pull request and create documentation updates in `docs-repo` (the `alse-sym/medusa-docs` repository).
 
 Use these artifacts for analysis:
 
-- `/tmp/gh-aw/agent/push-event.json`
-- `/tmp/gh-aw/agent/changed-files.txt`
-- `/tmp/gh-aw/agent/changes.diff`
+- `/tmp/gh-aw/agent/pr-metadata.json`
+- `/tmp/gh-aw/agent/pr-files.json`
+- `/tmp/gh-aw/agent/pr.diff`
 
 Execution requirements:
 

@@ -27,32 +27,42 @@
 #     - ../agents/docs-maintainer.md
 #     - shared/gh-aw-base.md
 #
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"aeecd3faf6bb7c0f2f75749fe9a4027b938c8b52b2ee16109d4c7ec96963a253"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"e10561d2cbe05f71e037a716e83d205fb46800a4bb793c2bc301449117188c6f"}
 
-name: "Push Documentation Sync"
+name: "PR Documentation Sync"
 "on":
-  push:
+  pull_request:
     branches:
     - develop
     - main
+    types:
+    - opened
+    - reopened
+    - synchronize
+    - ready_for_review
 
 permissions: {}
 
 concurrency:
-  group: "gh-aw-${{ github.workflow }}-${{ github.ref }}"
+  group: "gh-aw-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
+  cancel-in-progress: true
 
-run-name: "Push Documentation Sync"
+run-name: "PR Documentation Sync"
 
 jobs:
   activation:
     needs: pre_activation
-    if: needs.pre_activation.outputs.activated == 'true'
+    if: >
+      (needs.pre_activation.outputs.activated == 'true') && ((github.event_name != 'pull_request') || (github.event.pull_request.head.repo.id == github.repository_id))
     runs-on: ubuntu-slim
     permissions:
       contents: read
     outputs:
+      body: ${{ steps.sanitized.outputs.body }}
       comment_id: ""
       comment_repo: ""
+      text: ${{ steps.sanitized.outputs.text }}
+      title: ${{ steps.sanitized.outputs.title }}
     steps:
       - name: Setup Scripts
         uses: github/gh-aw/actions/setup@f88ec26c65cc20ebb8ceabe809c9153385945bfe # v0.46.0
@@ -83,6 +93,15 @@ jobs:
             const { setupGlobals } = require('/opt/gh-aw/actions/setup_globals.cjs');
             setupGlobals(core, github, context, exec, io);
             const { main } = require('/opt/gh-aw/actions/check_workflow_timestamp_api.cjs');
+            await main();
+      - name: Compute current body text
+        id: sanitized
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const { setupGlobals } = require('/opt/gh-aw/actions/setup_globals.cjs');
+            setupGlobals(core, github, context, exec, io);
+            const { main } = require('/opt/gh-aw/actions/compute_text.cjs');
             await main();
       - name: Create prompt with built-in context
         env:
@@ -282,14 +301,14 @@ jobs:
         with:
           fetch-depth: 0
       - env:
-          AFTER_SHA: ${{ github.event.after }}
-          BEFORE_SHA: ${{ github.event.before }}
-        name: Collect push context
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        name: Collect PR context
         run: |
           mkdir -p /tmp/gh-aw/agent
-          cp "$GITHUB_EVENT_PATH" /tmp/gh-aw/agent/push-event.json
-          git diff --name-status "$BEFORE_SHA" "$AFTER_SHA" > /tmp/gh-aw/agent/changed-files.txt
-          git diff "$BEFORE_SHA" "$AFTER_SHA" > /tmp/gh-aw/agent/changes.diff
+          gh pr view "$PR_NUMBER" --json number,title,body,author,baseRefName,headRefName,labels,url,mergedAt > /tmp/gh-aw/agent/pr-metadata.json
+          gh pr diff "$PR_NUMBER" > /tmp/gh-aw/agent/pr.diff
+          gh pr view "$PR_NUMBER" --json files > /tmp/gh-aw/agent/pr-files.json
       - name: Checkout docs repository
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
@@ -336,7 +355,7 @@ jobs:
               version: "",
               agent_version: "2.1.44",
               cli_version: "v0.46.0",
-              workflow_name: "Push Documentation Sync",
+              workflow_name: "PR Documentation Sync",
               experimental: false,
               supports_tools_allowlist: true,
               run_id: context.runId,
@@ -926,7 +945,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
           GH_AW_NOOP_MAX: 1
-          GH_AW_WORKFLOW_NAME: "Push Documentation Sync"
+          GH_AW_WORKFLOW_NAME: "PR Documentation Sync"
         with:
           github-token: ${{ secrets.CROSS_REPO_PAT }}
           script: |
@@ -939,7 +958,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Push Documentation Sync"
+          GH_AW_WORKFLOW_NAME: "PR Documentation Sync"
         with:
           github-token: ${{ secrets.CROSS_REPO_PAT }}
           script: |
@@ -952,7 +971,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Push Documentation Sync"
+          GH_AW_WORKFLOW_NAME: "PR Documentation Sync"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_WORKFLOW_ID: "docs-sync-to-medusa-docs"
@@ -971,7 +990,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Push Documentation Sync"
+          GH_AW_WORKFLOW_NAME: "PR Documentation Sync"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_NOOP_MESSAGE: ${{ steps.noop.outputs.noop_message }}
@@ -988,7 +1007,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Push Documentation Sync"
+          GH_AW_WORKFLOW_NAME: "PR Documentation Sync"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         with:
           github-token: ${{ secrets.CROSS_REPO_PAT }}
@@ -1031,7 +1050,7 @@ jobs:
       - name: Setup threat detection
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
-          WORKFLOW_NAME: "Push Documentation Sync"
+          WORKFLOW_NAME: "PR Documentation Sync"
           WORKFLOW_DESCRIPTION: "No description provided"
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
         with:
@@ -1113,6 +1132,7 @@ jobs:
           if-no-files-found: ignore
 
   pre_activation:
+    if: (github.event_name != 'pull_request') || (github.event.pull_request.head.repo.id == github.repository_id)
     runs-on: ubuntu-slim
     outputs:
       activated: ${{ steps.check_membership.outputs.is_team_member == 'true' }}
@@ -1149,7 +1169,7 @@ jobs:
       GH_AW_ENGINE_ID: "claude"
       GH_AW_SAFE_OUTPUT_MESSAGES: "{\"appendOnlyComments\":true}"
       GH_AW_WORKFLOW_ID: "docs-sync-to-medusa-docs"
-      GH_AW_WORKFLOW_NAME: "Push Documentation Sync"
+      GH_AW_WORKFLOW_NAME: "PR Documentation Sync"
     outputs:
       create_discussion_error_count: ${{ steps.process_safe_outputs.outputs.create_discussion_error_count }}
       create_discussion_errors: ${{ steps.process_safe_outputs.outputs.create_discussion_errors }}
