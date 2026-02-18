@@ -24,3 +24,7 @@ This change introduces a new admin API endpoint proposal for loyalty points adju
 
 - This is a documentation-driven demo artifact to test automated docs synchronization.
 - Validation and auth scopes should match existing admin write patterns.
+
+## New Query Support (v2)
+
+- Added optional query flag: `include_history=true` to include latest adjustment history in response.
