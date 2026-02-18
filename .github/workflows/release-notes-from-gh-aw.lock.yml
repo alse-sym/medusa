@@ -289,7 +289,7 @@ jobs:
       - env:
           GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
         name: Notify docs repo to cut version
-        run: "TAG=\"$(cat /tmp/gh-aw/agent/tag.txt)\"\ngh api \\\n  --method POST \\\n  \"/repos/alse-sym/medusa-docs/dispatches\" \\\n  -f event_type=\"medusa-release\" \\\n  -f client_payload=\"{\\\"version\\\":\\\"$TAG\\\"}\"\n"
+        run: "TAG=\"$(cat /tmp/gh-aw/agent/tag.txt)\"\ngh api \\\n  --method POST \\\n  \"/repos/alse-sym/medusa-docs/dispatches\" \\\n  -f event_type=\"medusa-release\" \\\n  -F client_payload[version]=\"$TAG\"\n"
 
       - name: Configure Git credentials
         env:
