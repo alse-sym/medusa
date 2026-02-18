@@ -27,16 +27,16 @@
 #     - ../agents/docs-maintainer.md
 #     - shared/gh-aw-base.md
 #
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"3482616c8345d655e7c32d8da80285bf69f461cbabb920d39de6f32efe1e8303"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"5d39be62e3c840e23d93f9d0bb83e3e5d08bae63609bd7352090f13dba46e605"}
 
 name: "PR Documentation Sync"
 "on":
   pull_request:
+    branches:
+    - develop
+    - main
     types:
-    - opened
-    - reopened
-    - synchronize
-    - ready_for_review
+    - closed
 
 permissions: {}
 
@@ -303,7 +303,7 @@ jobs:
         name: Collect PR context
         run: |
           mkdir -p /tmp/gh-aw/agent
-          gh pr view "$PR_NUMBER" --json number,title,body,author,baseRefName,headRefName,labels,url > /tmp/gh-aw/agent/pr-metadata.json
+          gh pr view "$PR_NUMBER" --json number,title,body,author,baseRefName,headRefName,labels,url,mergedAt > /tmp/gh-aw/agent/pr-metadata.json
           gh pr diff "$PR_NUMBER" > /tmp/gh-aw/agent/pr.diff
           gh pr view "$PR_NUMBER" --json files > /tmp/gh-aw/agent/pr-files.json
       - name: Checkout docs repository
@@ -420,7 +420,7 @@ jobs:
           cat > /opt/gh-aw/safeoutputs/tools.json << 'GH_AW_SAFE_OUTPUTS_TOOLS_EOF'
           [
             {
-              "description": "Create a new GitHub pull request to propose code changes. Use this after making file edits to submit them for review and merging. The PR will be created from the current branch with your committed changes. For code review comments on an existing PR, use create_pull_request_review_comment instead. CONSTRAINTS: Maximum 1 pull request(s) can be created. Title will be prefixed with \"[docs] \". Labels [documentation automation] will be automatically added. PRs will be created as drafts.",
+              "description": "Create a new GitHub pull request to propose code changes. Use this after making file edits to submit them for review and merging. The PR will be created from the current branch with your committed changes. For code review comments on an existing PR, use create_pull_request_review_comment instead. CONSTRAINTS: Maximum 1 pull request(s) can be created. Title will be prefixed with \"[docs] \". Labels [documentation automation] will be automatically added.",
               "inputSchema": {
                 "additionalProperties": false,
                 "properties": {
@@ -1220,7 +1220,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"create_pull_request\":{\"base_branch\":\"main\",\"draft\":true,\"fallback_as_issue\":false,\"if_no_changes\":\"warn\",\"labels\":[\"documentation\",\"automation\"],\"max\":1,\"max_patch_size\":1024,\"target-repo\":\"alse-sym/medusa-docs\",\"title_prefix\":\"[docs] \"},\"missing_data\":{},\"missing_tool\":{}}"
+          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"create_pull_request\":{\"base_branch\":\"main\",\"draft\":false,\"fallback_as_issue\":false,\"if_no_changes\":\"warn\",\"labels\":[\"documentation\",\"automation\"],\"max\":1,\"max_patch_size\":1024,\"target-repo\":\"alse-sym/medusa-docs\",\"title_prefix\":\"[docs] \"},\"missing_data\":{},\"missing_tool\":{}}"
         with:
           github-token: ${{ secrets.CROSS_REPO_PAT }}
           script: |
