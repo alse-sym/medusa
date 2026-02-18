@@ -1,7 +1,6 @@
 ---
 on:
-  pull_request:
-    types: [closed]
+  push:
     branches: [develop, main]
 permissions:
   contents: read
@@ -24,15 +23,15 @@ steps:
   - uses: actions/checkout@v5
     with:
       fetch-depth: 0
-  - name: Collect PR context
+  - name: Collect push context
     run: |
       mkdir -p /tmp/gh-aw/agent
-      gh pr view "$PR_NUMBER" --json number,title,body,author,baseRefName,headRefName,labels,url,mergedAt > /tmp/gh-aw/agent/pr-metadata.json
-      gh pr diff "$PR_NUMBER" > /tmp/gh-aw/agent/pr.diff
-      gh pr view "$PR_NUMBER" --json files > /tmp/gh-aw/agent/pr-files.json
+      cp "$GITHUB_EVENT_PATH" /tmp/gh-aw/agent/push-event.json
+      git diff --name-status "$BEFORE_SHA" "$AFTER_SHA" > /tmp/gh-aw/agent/changed-files.txt
+      git diff "$BEFORE_SHA" "$AFTER_SHA" > /tmp/gh-aw/agent/changes.diff
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      PR_NUMBER: ${{ github.event.pull_request.number }}
+      BEFORE_SHA: ${{ github.event.before }}
+      AFTER_SHA: ${{ github.event.after }}
   - name: Checkout docs repository
     uses: actions/checkout@v5
     with:
@@ -41,23 +40,22 @@ steps:
       path: docs-repo
 ---
 
-# PR Documentation Sync
+# Push Documentation Sync
 
-Analyze the code PR and create documentation updates in `docs-repo` (the `alse-sym/medusa-docs` repository).
+Analyze the merged code changes and create documentation updates in `docs-repo` (the `alse-sym/medusa-docs` repository).
 
 Use these artifacts for analysis:
 
-- `/tmp/gh-aw/agent/pr-metadata.json`
-- `/tmp/gh-aw/agent/pr-files.json`
-- `/tmp/gh-aw/agent/pr.diff`
+- `/tmp/gh-aw/agent/push-event.json`
+- `/tmp/gh-aw/agent/changed-files.txt`
+- `/tmp/gh-aw/agent/changes.diff`
 
 Execution requirements:
 
-1. If `mergedAt` in `pr-metadata.json` is null, emit a no-op and do not create any pull request.
-2. Update docs only for user-facing or integration-facing behavior changes.
-3. Create or update markdown pages under `docs-repo/docs/`.
-4. Keep edits scoped; avoid broad unrelated rewrites.
-5. Add a short migration section if backward compatibility changed.
-6. If no meaningful docs change is needed, emit a no-op with a short rationale.
+1. Update docs only for user-facing or integration-facing behavior changes.
+2. Create or update markdown pages under `docs-repo/docs/`.
+3. Keep edits scoped; avoid broad unrelated rewrites.
+4. Add a short migration section if backward compatibility changed.
+5. If no meaningful docs change is needed, emit a no-op with a short rationale.
 
 For writing style and structure, align with the local `.claude` guidance from this repository and the imported docs-maintainer agent instructions.
