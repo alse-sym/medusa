@@ -9,7 +9,6 @@ permissions:
 engine: claude
 imports:
   - shared/gh-aw-base.md
-  - ../agents/docs-maintainer.md
 safe-outputs:
   github-token: ${{ secrets.CROSS_REPO_PAT }}
   create-pull-request:
@@ -59,4 +58,4 @@ Execution requirements:
 4. Add a short migration section if backward compatibility changed.
 5. If no meaningful docs change is needed, emit a no-op with a short rationale.
 
-For writing style and structure, align with the local `.claude` guidance from this repository and the imported docs-maintainer agent instructions.
+For writing style and structure, align with the local `.claude` guidance from this repository.

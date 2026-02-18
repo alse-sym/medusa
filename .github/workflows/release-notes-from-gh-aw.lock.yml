@@ -26,7 +26,7 @@
 #   Imports:
 #     - shared/gh-aw-base.md
 #
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"736f9cd603f5f58504a1cb9d8e5137e236a308cf59d4b507403f9c3d3f805871"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"0537ca4d66d87a79e524e3aa2a1c4ca61c22177f28dc1655422bdd11486d466f"}
 
 name: "Release Notes Automation"
 "on":
