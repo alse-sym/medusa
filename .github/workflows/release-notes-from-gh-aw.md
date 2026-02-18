@@ -14,7 +14,6 @@ permissions:
 engine: claude
 imports:
   - shared/gh-aw-base.md
-  - ../agents/release-notes-writer.md
 safe-outputs:
   update-release:
     max: 1
@@ -43,7 +42,7 @@ steps:
         --method POST \
         "/repos/alse-sym/medusa-docs/dispatches" \
         -f event_type="medusa-release" \
-        -f client_payload="{\"version\":\"$TAG\"}"
+        -F client_payload[version]="$TAG"
     env:
       GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
 ---
